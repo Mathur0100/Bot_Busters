@@ -5,7 +5,7 @@
 [![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-> **Repository Link:** (https://github.com/Mathur0100/Bot_Busters.git)
+> **Repository Link:** https://github.com/Mathur0100/Bot_Busters.git
 
 ---
 
