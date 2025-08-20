@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Quantex — Advanced Lab Assistant</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+  html,body{height:100%;margin:0;font-family:'Orbitron',sans-serif;background:#0a0a0f;color:#dffaff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+  .chat-container{z-index:2;width:80%;max-width:960px;height:90%;background:rgba(0,0,0,0.45);border-radius:22px;padding:20px;backdrop-filter:blur(12px);box-shadow:0 0 50px rgba(0,200,255,0.18);display:flex;flex-direction:column;align-items:center}
+  .mascot{display:flex;flex-direction:column;align-items:center;margin-bottom:18px}
+  .face{width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#1a1f2c,#040409);border:3px solid #00f0ff;position:relative;box-shadow:0 0 30px rgba(0,255,255,0.28),inset 0 0 12px rgba(0,255,255,0.08);animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .eye{width:40px;height:40px;border-radius:50%;background:#000;position:absolute;top:55px;overflow:hidden}
+  .pupil{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:14px;left:14px;transition:transform .08s}
+  .eye.left{left:40px}.eye.right{right:40px}
+  .brow{width:30px;height:5px;border-radius:3px;background:linear-gradient(90deg,#00f0ff,#0099ff);position:absolute;top:28px;filter:drop-shadow(0 0 6px #00f0ff)}
+  .brow.left{left:38px;transform:rotate(-6deg)}.brow.right{right:38px;transform:rotate(6deg)}
+  .mouth{width:60px;height:25px;border-radius:0 0 50px 50px;border-bottom:4px solid #00d5ff;position:absolute;bottom:38px;left:50%;transform:translateX(-50%);filter:drop-shadow(0 0 6px #00f0ff);transition:all .18s}
+  .logo{margin-top:18px;position:relative}
+  .logo svg{width:320px;height:auto}
+  .shine{position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(120deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.32) 50%,rgba(255,255,255,0) 100%);transform:skewX(-20deg);animation:shineMove 2.2s linear infinite}
+  @keyframes shineMove{0%{left:-50%}100%{left:100%}}
+  .chat-box{flex:1;overflow:auto;margin:14px 0;width:100%;padding-right:8px}
+  .bubble{max-width:74%;padding:12px 16px;margin:10px;border-radius:14px;line-height:1.45;font-size:15px;word-wrap:break-word;opacity:0;transform:translateY(10px);animation:fade .32s forwards}
+  @keyframes fade{to{opacity:1;transform:translateY(0)}}
+  .bubble.user{background:linear-gradient(180deg,#00a2ff,#0078d4);color:#fff;margin-left:auto;border-bottom-right-radius:4px;font-weight:700;box-shadow:0 6px 18px rgba(0,120,220,0.12)}
+  .bubble.bot{background:rgba(255,255,255,0.03);color:#bffaff;margin-right:auto;border-bottom-left-radius:4px;font-weight:700;box-shadow:0 6px 18px rgba(0,255,255,0.04)}
+  .input-area{display:flex;gap:10px;width:100%;margin-top:6px}
+  input{flex:1;padding:12px;border-radius:12px;border:none;outline:none;background:rgba(255,255,255,0.03);color:#dffaff;font-size:15px}
+  button{padding:10px 18px;border-radius:12px;border:none;background:#00a2ff;color:#001;cursor:pointer;font-weight:700}
+  button:hover{filter:brightness(.95)}
+  .meta{margin-top:8px;font-size:13px;color:#8ef;text-align:left}
+  .hint{display:inline-block;background:rgba(0,162,255,0.08);padding:6px 8px;border-radius:8px;margin-right:8px;cursor:pointer;border:1px solid rgba(0,162,255,0.08)}
+  pre.steps{background:rgba(0,0,0,0.25);padding:12px;border-radius:10px;font-family:monospace;font-size:13px;color:#e7fff;white-space:pre-line}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="chat-container" role="main" aria-label="Quantex chat">
+  <div class="mascot" aria-hidden="true">
+    <div class="face">
+      <div class="eye left"><div class="pupil"></div></div>
+      <div class="eye right"><div class="pupil"></div></div>
+      <div class="brow left"></div>
+      <div class="brow right"></div>
+      <div class="mouth"></div>
+    </div>
+    <div class="logo">
+      <svg viewBox="0 0 600 150"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00f0ff"/><stop offset="50%" stop-color="#007bff"/><stop offset="100%" stop-color="#00f0ff"/></linearGradient></defs><text x="50%" y="60%" text-anchor="middle" font-size="72" font-weight="900" fill="url(#grad)" stroke="#00eaff" stroke-width="1.5">QUANTEX</text></svg>
+      <div class="shine" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div id="messages" class="chat-box" aria-live="polite"></div>
+
+  <div class="input-area">
+    <input id="input" placeholder="E.g. 'projector no power', 'microscope blurry', 'pc overheating' — ask clearly" aria-label="Message input"/>
+    <button id="send">Send</button>
+  </div>
+</div>
+
+<script>
+/* =============================
+   Core DOM & helpers
+   ============================= */
+const send = document.getElementById('send');
+const input = document.getElementById('input');
+const messages = document.getElementById('messages');
+const pupils = document.querySelectorAll('.pupil');
+const mouth = document.querySelector('.mouth');
+
+function appendUser(text){
+  const b=document.createElement('div'); b.className='bubble user'; b.textContent=text; messages.appendChild(b); messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'});
+}
+function appendBotTyping(text, hints=[]){
+  const b=document.createElement('div'); b.className='bubble bot'; messages.appendChild(b);
+  const span=document.createElement('span'); span.className='typing'; b.appendChild(span);
+  let i=0;
+  function tick(){
+    if(i<text.length){
+      span.textContent += text[i++];
+      messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'});
+      mouth.style.transform = `translateX(-50%) scaleY(${0.9 + 0.12*Math.sin(i/3)})`;
+      setTimeout(tick, 14);
+    } else {
+      span.classList.remove('typing');
+      mouth.style.transform = 'translateX(-50%) scaleY(1)';
+      if(hints && hints.length){
+        const meta=document.createElement('div'); meta.className='meta';
+        hints.forEach(h=>{
+          const s=document.createElement('span'); s.className='hint'; s.textContent=h; s.onclick=()=> handleHint(h);
+          meta.appendChild(s);
+        });
+        b.appendChild(meta);
+      }
+    }
+  }
+  tick();
+}
+
+/* =============================
+   MASSIVE Knowledge Base (local)
+   Keys: "equipment" or "equipment:issue" (lowercase). 
+   Keep answers concise and action-oriented.
+   ============================= */
+const KB = {
+  /* --- General lab & safety --- */
+  "lab:cleanliness":"Maintain daily cleaning schedule; remove waste, wipe benches with appropriate disinfectant, and keep aisles clear.",
+  "lab:safety":"Wear PPE, keep SDS accessible, store chemicals correctly, know emergency exits and fire extinguisher locations.",
+  "emergency:fire":"Evacuate if uncontrolled, use nearest extinguisher only if trained, call emergency services and inform lab supervisor.",
+  "sds":"Safety Data Sheets must be available for all chemicals; consult SDS for handling, PPE, storage and spill response.",
+
+  /* --- Chemistry --- */
+  "chemicals:storage":"Segregate flammables, corrosives, oxidizers; use ventilated cabinets for volatile solvents; label containers with date and hazard.",
+  "acid:spill":"Evacuate area if large, neutralize small acid spills per SDS (use appropriate neutralizer), wear acid-resistant PPE and dispose as hazardous waste.",
+  "bases:spill":"Similar to acids: neutralize per SDS with acidifying neutralizer, use appropriate PPE and dispose properly.",
+  "solvent:handling":"Use in fume hood if volatile, store in flammable cabinet, ground containers when dispensing, avoid ignition sources.",
+  "glassware:inspection":"Inspect for chips/cracks before use; discard damaged pieces into glass disposal and record replacements.",
+  "pipette:maintenance":"Use recommended tips, store vertically, routinely check seals and calibrate monthly or per SOP.",
+  "bunsen:leak":"Turn gas off, ventilate, check tubing for cracks, replace tubing and test for leaks with soapy water, do not ignite until confirmed safe.",
+  "fumehood:lowflow":"Check airflow monitor, ensure sash is at correct height, remove obstructions, log and report to facilities for balancing.",
+
+  /* --- Physics / Optics --- */
+  "microscope:blurry":"Clean objective and ocular lenses with lens tissue and approved solvent, ensure condenser and diaphragm are correctly positioned, use correct immersion oil for oil objectives.",
+  "microscope:focus":"Start on low power, center specimen, then increase magnification and refocus fine knob; check for stuck stage or condenser misalignment.",
+  "laser:safety":"Never look into beam, use beam stops, enable key switch interlocks, wear laser-rated goggles and post hazard signs.",
+  "optics:alignment":"Use alignment targets and iterative adjustment; tighten mounts only after alignment verified.",
+  "projector:no power":"Check power cable & mains, inspect built-in fuse, toggle power switch, try known-good outlet and replacement power cable before opening lamp compartment.",
+  "projector:no image":"Check input source selection, test HDMI/VGA cable, test with another computer, verify lamp life and internal menu settings.",
+  "oscilloscope:probe":"Use 10x probe if needed, set probe attenuation correctly on scope, ground probe properly to avoid noise.",
+  "oscilloscope:calibrate":"Run built-in calibration signal, adjust probe compensation trimmer, record calibration date.",
+  "signalgen:outputlow":"Check amplitude setting, load impedance, cable integrity and generator output connector.",
+
+  /* --- Electronics & Electrical --- */
+  "multimeter:wrong reading":"Verify correct function (voltage/current/resistance) and range, check lead continuity and polarity, replace battery and internal fuse if needed.",
+  "multimeter:fuseblown":"Replace meter fuse with correct rating; never measure current with meter set to voltage.",
+  "power_supply:overheat":"Check fan operation, ensure vents clear, reduce load, verify supply rating vs load; service if thermal protection triggers.",
+  "soldering:tips":"Keep tip tinned, use correct temperature for the alloy, clean with brass sponge, store in holder when idle.",
+  "pcb:shorts":"Visually inspect solder joints, use magnifier and multimeter continuity check, rework suspect joints and clean flux residue.",
+  "esd:protection":"Use grounded wrist strap, ESD mats, store sensitive parts in antistatic bags and keep humidity controlled if needed.",
+  "battery:storage":"Store batteries at specified state-of-charge, cool dry place, avoid shorting terminals, follow disposal regs for Li-ion, lead-acid.",
+  "transformer:hum":"Check mounting bolts, core clamp, and load imbalance; hum can indicate loose laminations or mechanical resonance.",
+
+  /* --- Computer / IT --- */
+  "pc:slow":"Check Task Manager for CPU/RAM usage, uninstall unneeded startup apps, run malware scan, free disk space, consider SSD upgrade.",
+  "pc:overheating":"Clean fans/filters, improve airflow, check thermal paste on CPU/GPU, monitor temps, avoid high-CPU workloads on weak cooling.",
+  "pc:won't boot":"Check PSU LED and cables, disconnect peripherals, test RAM sticks singly, boot into BIOS/UEFI to check drive detection.",
+  "network:dropouts":"Restart router and switch, check cable crimps, test ping to gateway, check Wi-Fi channel congestion and DHCP lease conflicts.",
+  "backup:data":"Use scheduled backups, verify restore periodically, keep an offline/offsite copy for critical lab data.",
+  "printer:paper jam":"Power off, open access panels, remove jammed paper in direction of feed, inspect rollers and sensors, run diagnostics.",
+  "camera:no feed":"Test with another application, check device drivers & permissions, try another USB port/cable.",
+  "microphone:no sound":"Check mute, OS sound settings & input device selection, test in another app and try replacement cable/mic.",
+
+  /* --- Robotics / Mechanical --- */
+  "motor:not turning":"Check supply voltage and polarity, inspect motor driver signals, test motor on bench supply, check mechanical obstruction.",
+  "robot:erratic":"Verify sensor calibration and encoder signals, check for loose belts/gears, inspect software control loops and tune PID parameters.",
+  "actuator:sticky":"Lubricate per manufacturer spec, inspect seals and mounts, test without load, replace worn components.",
+  "gearbox:noise":"Inspect for broken teeth, lubrication deficiency, or misalignment and service promptly.",
+
+  /* --- Biology / Life Sciences --- */
+  "incubator:temp drift":"Verify thermostat and sensor placement, check heater element & fan, calibrate sensor with reference thermometer and log trends.",
+  "centrifuge:imbalance":"Stop immediately, rebalance tubes symmetrically, inspect rotor for corrosion or damage, do not run with cracked rotor.",
+  "autoclave:fail":"Check water reservoir, door seal, pressure and temperature sensors, run validation cycle and consult maintenance if repeated failures.",
+  "pipette:inaccurate":"Check piston seals and tip fit, service/calibrate according to schedule, avoid temperature extremes during pipetting.",
+
+  /* --- Workshop / Fabrication --- */
+  "3dprinter:warping":"Level bed, use adhesive base (glue/PEI), control ambient temperature, slow down first layer and enable heated bed.",
+  "laser:cutting:inconsistent":"Check focus, clean optics, adjust speed/power and use consistent material; inspect ventilation.",
+  "drillpress:runout":"Check chuck & arbor, tighten mounting, use appropriate drill bit and correct feed rate.",
+
+  /* --- Networking / Wireless --- */
+  "wifi:weak":"Move AP to central location, reduce obstacles, change to less-congested channel, use 5 GHz where appropriate, check antenna connections.",
+  "ethernet:linkdown":"Check cable, SFP/module, switch port status and speed/duplex mismatch, replace cable with CAT6/appropriate spec.",
+
+  /* --- Environmental / HVAC --- */
+  "hvac:condensation":"Monitor humidity, insulate cold surfaces, maintain airflow and filters, report to facilities for HVAC maintenance.",
+  "humidity:control":"Use dehumidifiers or controlled HVAC; critical labs may require dedicated humidity control."
+
+  /* NOTE: KB can be extended programmatically below */
+};
+
+/* Add more targeted KB entries programmatically for broad coverage */
+(function seedMore(){
+  const extras = {
+    // Chemistry specifics
+    "acid:storage":"Store concentrated acids in corrosion-resistant cabinets; keep bases separate; use secondary containment for corrosives.",
+    "solvent:storage":"Store solvents in flammable storage cabinets labeled by class; limit container size and use grounding when dispensing.",
+    "glassware:cleaning":"Rinse immediately, soak for stubborn residues, use appropriate detergents and dry racks; inspect before reuse.",
+    // Electronics specifics
+    "probe:grounding":"Ensure oscilloscope probe ground is connected to circuit ground to prevent floating signals and noise.",
+    "signal:attenuation":"Match source/load impedance and use proper attenuation to prevent overloading inputs.",
+    // Generic maintenance
+    "inventory:management":"Maintain digital inventory with purchase date, serial, last service date, and next calibration due.",
+    "log:maintenance":"Record every maintenance task with date, person, and actions taken for audit and trending.",
+    // AV and classroom
+    "audio:feedback":"Lower mic gain, move speakers away from mic, use directional mics and acoustic dampening.",
+    "presentation:setup":"Before demo, test projector, laptop output and audio; have spare HDMI and adapter cables.",
+    // Robotics / sensors
+    "ultrasonic:sensor":"Check wiring and power, verify trigger/echo timing, ensure clean surface for reflections.",
+    // Safety reminders
+    "ppe":"Use gloves, goggles, lab coat, and respirators where required. Replace damaged PPE immediately.",
+    // Consumables
+    "filament:moisture":"Store 3D filament in dry boxes with desiccant; dry filament if printing issues occur due to moisture.",
+    // Workshop
+    "saw:blade":"Use correct blade type for material, check teeth and tension, ensure guards are in place."
+  };
+  Object.assign(KB, extras);
+
+  // programmatically expand similar entries by patterns (helps fuzzy matches)
+  const devices = ["projector","microscope","multimeter","oscilloscope","printer","camera","router","battery","motor","centrifuge","incubator"];
+  devices.forEach(d=>{
+    if(!KB[d]) KB[d] = `General checks for ${d}: power, connections, basic cleaning, and consult manual for specifics.`;
+  });
+})();
+
+/* =============================
+   Synonyms & matching helpers
+   ============================= */
+const equipmentSynonyms = {
+  "microscope":["microscope","scope","objective","ocular"],
+  "projector":["projector","proj","lamp"],
+  "pc":["pc","computer","laptop","workstation","desktop"],
+  "printer":["printer","print"],
+  "multimeter":["multimeter","meter","dmm"],
+  "oscilloscope":["oscilloscope","scope","o-scope"],
+  "camera":["camera","webcam","cam"],
+  "microphone":["microphone","mic"],
+  "centrifuge":["centrifuge"],
+  "incubator":["incubator"],
+  "fumehood":["fume hood","fumehood","hood"],
+  "pipette":["pipette"],
+  "motor":["motor"],
+  "robot":["robot","robotics"],
+  "router":["router","wifi","access point"],
+  "battery":["battery","batt","cell"],
+  "sensor":["sensor","probe","transducer"]
+};
+const issueKeywords = {
+  "no power":["no power","won't power","won't turn","not powering","dead","won't start","not starting"],
+  "no image":["no image","black screen","no display","blank screen","no signal","no feed","no picture"],
+  "no sound":["no sound","mute","no audio","silent","no mic","no speaker"],
+  "dirty":["dirty","dust","smudge","smudged","dirty lens","fingerprint"],
+  "not working":["not working","doesn't work","broken","faulty","fails","malfunction","error"],
+  "slow":["slow","lag","lagging","sluggish"],
+  "overheat":["overheat","overheating","hot","heat","temperature high"],
+  "calibrate":["calibrate","calibration","accuracy","inaccurate","offset"],
+  "connection":["cable","connection","connect","usb","hdmi","vga","ethernet","port"],
+  "jam":["jam","stuck","paper jam","blocked"],
+  "leak":["leak","spillage","spill","leaking"],
+  "imbalance":["imbalance","vibration","shaking"]
+};
+const equipmentList = Object.keys(equipmentSynonyms).reduce((acc,k)=>{equipmentSynonyms[k].forEach(s=>acc[s]=k);return acc;},{});
+
+/* normalize/tokenize */
+function normalize(s){return String(s||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
+function tokens(s){return normalize(s).split(' ').filter(Boolean);}
+
+/* find best KB match: equipment + issue prioritized, then fuzzy overlap scoring */
+function findBestKBMatch(input){
+  const text = normalize(input);
+  if(!text) return null;
+
+  // direct exact
+  if(KB[text]) return {key:text,answer:KB[text],score:1.0};
+
+  // detect equipment
+  let foundEquip = null;
+  for(const t of tokens(text)){ if(equipmentList[t]){ foundEquip = equipmentList[t]; break; } }
+
+  // detect issue type
+  let foundIssue=null;
+  for(const ik in issueKeywords){
+    for(const p of issueKeywords[ik]){
+      if(text.includes(p)){ foundIssue=ik; break; }
+    }
+    if(foundIssue) break;
+  }
+
+  // try equipment:issue
+  if(foundEquip && foundIssue){
+    const candidate = `${foundEquip}:${foundIssue}`;
+    if(KB[candidate]) return {key:candidate,answer:KB[candidate],score:0.96};
+  }
+
+  // try equipment general
+  if(foundEquip && KB[foundEquip]) return {key:foundEquip,answer:KB[foundEquip],score:0.8};
+
+  // fuzzy token overlap across KB keys
+  const inputTokens = tokens(text);
+  let best=null;
+  for(const k of Object.keys(KB)){
+    const kTokens = tokens(k);
+    let match=0;
+    for(const tk of kTokens) if(inputTokens.includes(tk)) match++;
+    const score = match / Math.max(1,kTokens.length);
+    if(score>0 && (!best || score>best.score)) best={key:k,answer:KB[k],score};
+  }
+  if(best && best.score >= 0.5) return best;
+
+  // fallback null
+  return null;
+}
+
+/* =============================
+   Web fallback (no API key)
+   - tries jina.ai wiki text proxy, then allorigins->wikipedia,
+   - then DuckDuckGo HTML snippet (via allorigins) for broader sources.
+   Returns short string or null.
+   ============================= */
+async function webFallback(query){
+  const qw = encodeURIComponent(query.split(' ').slice(0,5).join(' '));
+  // 1) jana jina.ai Wikipedia raw text
+  try{
+    const r = await fetch(`https://r.jina.ai/http://en.wikipedia.org/wiki/${qw}`);
+    if(r.ok){
+      const txt = await r.text();
+      const first = txt.split('\n\n').find(p=>p && p.length>80);
+      if(first) return first.replace(/\n/g,' ').slice(0,900);
+    }
+  }catch(e){/*ignore*/}
+
+  // 2) allorigins wikipedia extract
+  try{
+    const wiki = 'https://en.wikipedia.org/wiki/' + encodeURIComponent(query.split(' ')[0]);
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(wiki));
+    if(r.ok){
+      const j = await r.json();
+      const html = j.contents || '';
+      const m = html.match(/<p>(.*?)<\/p>/);
+      if(m && m[1]){ const txt = m[1].replace(/<[^>]*>/g,'').trim(); if(txt.length>40) return txt.slice(0,900); }
+    }
+  }catch(e){/*ignore*/}
+
+  // 3) DuckDuckGo HTML search snippet via allorigins (broader websites)
+  try{
+    const dd = 'https://duckduckgo.com/html/?q=' + encodeURIComponent(query + ' lab maintenance');
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(dd));
+    if(r.ok){
+      const j = await r.json(); const html = j.contents || '';
+      // find first result snippet
+      let match = html.match(/result__snippet">([^<]{40,}?)</);
+      if(!match) match = html.match(/snippet">([^<]{40,}?)</);
+      if(match && match[1]) return match[1].replace(/\s+/g,' ').trim().slice(0,1000);
+    }
+  }catch(e){/*ignore*/}
+
+  return null;
+}
+
+/* =============================
+   Local learning (teach) & history
+   ============================= */
+function localLearn(key,answer){
+  const mem = JSON.parse(localStorage.getItem('quantexCustom')||'{}');
+  mem[key]=answer;
+  localStorage.setItem('quantexCustom', JSON.stringify(mem));
+  KB[key]=answer;
+}
+function loadCustomIntoKB(){
+  const mem = JSON.parse(localStorage.getItem('quantexCustom')||'{}');
+  Object.assign(KB, mem);
+}
+loadCustomIntoKB();
+
+/* =============================
+   Conversation flow: step-by-step support
+   ============================= */
+let context = { lastKey:null, fullAnswer:null, stepIndex:0 };
+
+function provideNext(){
+  if(!context.fullAnswer) { appendBotTyping("No active multi-step flow. Ask about an issue first.", ['teach','history']); return; }
+  const lines = context.fullAnswer.replace(/\r/g,'').split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  if(context.stepIndex >= lines.length){ appendBotTyping("All steps completed. If issue persists, escalate to facility/tech support.", ['teach','history']); context.fullAnswer=null; context.lastKey=null; context.stepIndex=0; return; }
+  const step = `Step ${context.stepIndex+1}/${lines.length}: ${lines[context.stepIndex]}`;
+  context.stepIndex++; appendBotTyping(step, ['next','repeat','resolved','teach']);
+}
+function repeatStep(){ if(!context.fullAnswer) return appendBotTyping("No step to repeat.", ['teach']); const idx=Math.max(0,context.stepIndex-1); const lines=context.fullAnswer.replace(/\r/g,'').split(/\n+/).map(s=>s.trim()).filter(Boolean); appendBotTyping(`Step ${idx+1}/${lines.length}: ${lines[idx]||lines[0]}`, ['next','repeat','resolved','teach']); }
+function markResolved(){ appendBotTyping("Marked resolved for this session. Ask next issue when ready.", ['history']); context.fullAnswer=null; context.lastKey=null; context.stepIndex=0; }
+
+/* =============================
+   Hints & actions
+   ============================= */
+function handleHint(h){
+  const c=h.toLowerCase();
+  if(c==='teach'){ openTeach(); return; }
+  if(c==='history'){ const mem=JSON.parse(localStorage.getItem('quantexCustom')||'{}'); const keys=Object.keys(mem); return appendBotTyping(keys.length?("Learned keys:\\n- "+keys.join('\\n- ')):"No learned entries yet.", ['teach']); }
+  if(c==='next') return provideNext();
+  if(c==='repeat') return repeatStep();
+  if(c==='resolved') return markResolved();
+  // otherwise treat hint as new query
+  processUser(h);
+}
+
+/* teach prompt */
+function openTeach(){
+  const key = prompt("Teach — enter a short key (e.g. 'projector:no power' or 'microscope:blurry'):");
+  if(!key) return alert('Teach cancelled.');
+  const ans = prompt("Paste the resolution (newline allowed, stepwise recommended):");
+  if(!ans) return alert('Teach cancelled.');
+  localLearn(key.toLowerCase().trim(), ans.trim());
+  alert('Saved locally — Quantex will answer this next time.');
+}
+
+/* =============================
+   Answer formatting & response builder
+   ============================= */
+function formatAnswer(raw){
+  if(!raw) return "No concise solution found. Rephrase, or use 'teach: key | answer' to add one.";
+  let s=String(raw).replace(/\r/g,'').trim();
+  const lines=s.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  if(lines.length>1) return lines.map((l,i)=>`${i+1}. ${l.replace(/^\d+\)\s*/,'')}`).join('\n');
+  return s;
+}
+
+/* =============================
+   Main processing pipeline
+   ============================= */
+async function processUser(raw){
+  const text=String(raw||'').trim(); if(!text) return;
+  appendUser(text);
+
+  const low=text.toLowerCase();
+  if(low==='history'){ const mem=JSON.parse(localStorage.getItem('quantexCustom')||'{}'); const keys=Object.keys(mem); return appendBotTyping(keys.length?('Learned keys:\\n- '+keys.join('\\n- ')):'No learned entries', ['teach','history']); }
+  if(low.startsWith('teach:')){ const payload=text.slice(6).trim(); if(!payload) return appendBotTyping("Teach format: teach: key | answer", ['teach']); const parts=payload.split('|'); const key=(parts[0]||'').trim().toLowerCase(); const ans=(parts[1]||'').trim(); if(!key||!ans) return appendBotTyping("Invalid teach format. Use: teach: key | answer", ['teach']); localLearn(key, ans); return appendBotTyping("Saved taught response under key: "+key, ['history']); }
+
+  // local KB match
+  const match = findBestKBMatch(text);
+  if(match && match.score >= 0.75){
+    // confident local answer
+    context.lastKey = match.key; context.stepIndex=0;
+    if(String(match.answer).includes('\n')){ context.fullAnswer = match.answer; appendBotTyping(`Found stepwise resolution for '${match.key}'. Type 'next' to proceed step-by-step.`, ['next','repeat','teach','history']); return; }
+    return appendBotTyping(formatAnswer(match.answer), ['teach','history']);
+  }
+
+  if(match && match.score >= 0.5){
+    // fuzzy match: show concise and hint to teach or web
+    appendBotTyping(formatAnswer(match.answer), ['teach','history']);
+    return;
+  }
+
+  // web fallback
+  appendBotTyping("Searching web for a concise authoritative snippet...", []);
+  const web = await webFallback(text);
+  if(web){
+    appendBotTyping(web, ['teach','history']);
+    return;
+  }
+
+  // last resort
+  appendBotTyping("I couldn't find a confident answer locally or on quick web lookup. Please rephrase or teach me the resolution (use 'teach: key | answer').", ['teach','history']);
+}
+
+/* =============================
+   UI events
+   ============================= */
+send.addEventListener('click', ()=>{ const v=input.value.trim(); if(!v) return; input.value=''; if(v.toLowerCase()==='next') return provideNext(); if(v.toLowerCase()==='repeat') return repeatStep(); if(v.toLowerCase()==='resolved') return markResolved(); processUser(v); });
+input.addEventListener('keypress', e=>{ if(e.key==='Enter') send.click(); });
+
+/* =============================
+   Eye tracking & particle background (unchanged visuals)
+   ============================= */
+document.addEventListener('mousemove', e=>{
+  pupils.forEach(p=>{
+    const eye=p.parentElement; const rect=eye.getBoundingClientRect();
+    const dx=e.clientX - (rect.left + rect.width/2);
+    const dy=e.clientY - (rect.top + rect.height/2);
+    const ang=Math.atan2(dy,dx); const r=8; p.style.transform = `translate(${r*Math.cos(ang)}px, ${r*Math.sin(ang)}px)`;
+  });
+});
+const canvas=document.getElementById('bg'); const ctx=canvas.getContext('2d');
+let w,h,particles=[]; function resize(){ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; } window.addEventListener('resize', resize); resize();
+for(let i=0;i<160;i++) particles.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-0.5)*0.7,vy:(Math.random()-0.5)*0.7,s:1+Math.random()*2});
+function draw(){ ctx.fillStyle='rgba(10,10,15,0.52)'; ctx.fillRect(0,0,w,h); ctx.strokeStyle='rgba(0,255,255,0.12)'; particles.forEach((p,idx)=>{ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>w) p.vx*=-1; if(p.y<0||p.y>h) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x,p.y,p.s,0,Math.PI*2); ctx.fillStyle='rgba(0,255,255,0.68)'; ctx.fill(); for(let j=idx+1;j<particles.length;j++){ const q=particles[j]; const dx=p.x-q.x, dy=p.y-q.y; const dist=Math.hypot(dx,dy); if(dist<85){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); } } }); requestAnimationFrame(draw); } draw();
+
+/* =============================
+   Startup message (concise)
+   ============================= */
+appendBotTyping("Quantex online — ask about any lab equipment or preventive maintenance (e.g. 'microscope blurry', 'projector no power'). I answer concisely. Use 'teach: key | answer' to add new resolutions.", ['teach','history']);
+
+/* expose for debugging */
+window.quantex_learn = localLearn; window.quantex_kb = KB;
+</script>
+</body>
+</html>
