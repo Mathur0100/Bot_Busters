@@ -98,8 +98,7 @@ teach: projector:color issue | Check cable → set input source → reset displa
 
 Quantex/
 │── index.html # All UI + logic in one file (for easy judging)
-│── README.md # This file
-└── screenshots/ # Your images for the README
+└── README.md # This file
 
 ---
 
