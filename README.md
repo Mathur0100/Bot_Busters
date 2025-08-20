@@ -1,67 +1,127 @@
-# Bot_Busters
-# 🤖 Quantex AI – Preventive Maintenance Chatbot  
+# 🤖 Quantex AI — Preventive Maintenance Chatbot (College Labs)
 
-[![Made with HTML](https://img.shields.io/badge/Made%20with-HTML-orange?style=for-the-badge&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/HTML)  
-[![Made with CSS](https://img.shields.io/badge/Made%20with-CSS-blue?style=for-the-badge&logo=css3)](https://developer.mozilla.org/en-US/docs/Web/CSS)  
-[![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)  
-[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://opensource.org/licenses/MIT)  
+[![Made with HTML](https://img.shields.io/badge/Made%20with-HTML-orange?style=for-the-badge&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![Made with CSS](https://img.shields.io/badge/Made%20with-CSS-blue?style=for-the-badge&logo=css3)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![Made with JavaScript](https://img.shields.io/badge/Made%20with-JavaScript-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
----
-
-Quantex AI is a **futuristic AI-powered chatbot** built for **college laboratories** (Physics, Chemistry, Computer Science, Electrical, Mechanical, etc.).  
-It provides **preventive maintenance guidance, troubleshooting help, and lab best practices** in an interactive and **visually advanced UI**.  
+> **Repository Link:** 👉 _paste your GitHub repo URL here_
 
 ---
 
-## ✨ Features  
-- 🚀 **Futuristic chatbot UI** with high-end visuals and animations.  
-- 💬 **Interactive responses** for lab issues and preventive maintenance.  
-- 🧠 **Massive knowledge base** covering:
-  - Physics lab safety & equipment handling.  
-  - Chemistry lab hazard storage & cleaning.  
-  - Computer lab hardware/software issues.  
-  - Electrical/Mechanical tool & machine maintenance.  
-- 🌐 **Web-enhanced answers** (from sources like Wikipedia, lab manuals, technical sites).  
-- 🎨 **Fully front-end project** (runs on any browser, no installation needed).  
+## 🧩 Problem Statement
+
+College laboratories (Physics, Chemistry, Computer, Electrical/Mechanical) face:
+- Frequent equipment issues (e.g., “projector no power”, “microscope blurry”, “PC overheating”).
+- Lack of quick, standardized troubleshooting guidance.
+- Preventive maintenance tasks are often missed, leading to downtime, safety risks, and delayed practical sessions.
+
+**Goal:** Build a single-page AI assistant that provides **instant, concise, step-by-step** preventive maintenance and troubleshooting guidance for common lab equipment — without needing any API keys or backend.
 
 ---
 
-## 📂 Project Structure  
-QuantexBot/
-│── index.html # Main chatbot application
-│── README.md # Documentation
+## ✅ Current Progress Status
+
+**What’s done (prototype-ready):**
+- ✔️ High-end futuristic UI (mascot, neon QUANTEX logo, particle background).
+- ✔️ Eye-tracking mascot + typing animation.
+- ✔️ **Large local knowledge base** (multi-lab: PC/AV/Microscope/Electronics/Chemistry Safety/etc.).
+- ✔️ Query analyzer (equipment + issue intent; fuzzy matching; synonyms).
+- ✔️ **Teach mode** to add custom fixes on the fly (saved locally in browser `localStorage`).
+- ✔️ Optional web fallback (Wikipedia/Jina proxy) for quick references (no API keys).
+
+**What’s pending (post-submission roadmap):**
+- ⏳ Add dedicated backend with persistent DB (store custom learnings per lab).
+- ⏳ Rich web sources beyond Wikipedia (manufacturer manuals, safety SOP PDFs).
+- ⏳ Admin dashboard to track recurring issues and schedule maintenance.
+- ⏳ Offline bundle for labs with limited internet.
+- ⏳ Voice I/O and multi-language support.
 
 ---
 
-## ⚙️ How to Run  
-1. **Download / Clone** this repository.  
-2. Open `index.html` in any modern browser (Chrome, Edge, Firefox).  
-3. Start chatting with the AI assistant.  
+## 🛠️ How the Prototype Solves the Problem
 
-That’s it ✅ (No server setup or installation needed).  
-
----
-
-## 🧪 How It Works  
-1. Open the chatbot interface (`index.html`).  
-2. Enter your query (lab issue, preventive care, troubleshooting).  
-3. Chatbot analyzes and provides **instant, meaningful answers**.  
-4. Knowledge base covers **all labs** and connects with **web-enhanced references**.  
+1. **Immediate Answers:** Typed issues like “projector no power” trigger targeted, to-the-point resolutions from a curated knowledge base.
+2. **Consistency:** Guidance is standardized across labs; step-by-step flows reduce guesswork.
+3. **Learning on the Fly:** Staff can **teach** Quantex custom fixes (`teach: key | steps`), which are remembered locally.
+4. **Web-Enhanced Context:** When local knowledge is insufficient, Quantex pulls a concise reference snippet from the web (no keys).
+5. **Futuristic, Engaging UI:** Improves adoption by students/lab assistants, reinforcing routine preventive maintenance.
 
 ---
 
-## 🚀 Future Improvements  
-- AI/NLP-based advanced query analysis.  
-- Voice-enabled chatbot.  
-- Multi-language support.  
-- Enhanced integration with real lab manuals & IoT devices.  
+## 🧪 Demo & Screenshots
+
+> Replace the placeholders below with your own images.
+
+| Home (Futuristic UI) | Typing + Mascot | Example Fix |
+|---|---|---|
+| ![Home](screenshots/home.png) | ![Typing](screenshots/typing.png) | ![Fix](screenshots/fix.png) |
+
+Additional:
+- `screenshots/mobile.png` (Mobile responsive view)
+- `screenshots/teach-mode.png` (Teach flow)
 
 ---
 
-## 📜 License  
-MIT License – free to use and modify.  
+## 🚀 Quick Start (Front-End Only)
+
+This prototype runs **entirely in the browser**.
+
+1. Download/clone this repo.
+2. Open `index.html` in Chrome/Edge/Firefox.
+3. Start chatting with Quantex (e.g., “microscope blurry”, “projector no power”, “pc overheating”).
+4. To add your own fix:
+teach: projector:color issue | Check cable → set input source → reset display mode → test with spare HDMI.
+
+> Optional: Use VS Code “Live Server” for auto-reload.
 
 ---
 
-## 👨‍💻 Author  
-Developed by **Rhythm Mathur** and **Sombit Mitra** for **Preventive Maintenance AI Lab Assistant Project**.  
+## 🧠 What You Can Ask (Examples)
+
+- “projector no power”, “projector overheat”
+- “microscope blurry”, “microscope not focusing”
+- “pc overheating”, “usb device not detected”
+- “multimeter wrong reading”, “oscilloscope no signal”
+- “chemical spill”, “fume hood low airflow”
+- “printer paper jam”, “camera no feed”
+
+---
+
+## 🧰 Tech/Tools Used
+
+- **HTML + CSS + Vanilla JavaScript** (single-page app)
+- **Custom Query Analyzer** (equipment/issue detection, synonyms, fuzzy matching)
+- **Local Knowledge Base** (expandable)
+- **Local Learning** via `localStorage`
+- **Optional Web Fallback** using public endpoints (no API keys)
+
+---
+
+## 📦 Project Structure
+
+Quantex/
+│── index.html # All UI + logic in one file (for easy judging)
+│── README.md # This file
+└── screenshots/ # Your images for the README
+
+---
+
+## 🧭 Submission Checklist (for me)
+
+- [ ] Repo link pasted into the form.
+- [ ] README includes problem statement, progress, solution, tech stack, screenshots.
+- [ ] Screenshots added to `/screenshots` and paths updated.
+- [ ] Opened `index.html` to verify everything works end-to-end.
+
+---
+
+## 📜 License
+
+MIT — free to use and modify with attribution.
+
+---
+
+## 🙌 Credits
+
+Designed & built by **Rhythm Mathur** and **Sombit Mitra** — Quantex AI: Preventive Maintenance Assistant for College Labs.
