@@ -1,4 +1,4 @@
-# 🤖 Quantex AI — Preventive Maintenance Chatbot (College Labs)
+# 🤖 Quantex AI — Preventive Maintenance Chatbot
 
 [![Made with HTML](https://img.shields.io/badge/Made%20with-HTML-orange?style=for-the-badge&logo=html5)](https://developer.mozilla.org/en-US/docs/Web/HTML)
 [![Made with CSS](https://img.shields.io/badge/Made%20with-CSS-blue?style=for-the-badge&logo=css3)](https://developer.mozilla.org/en-US/docs/Web/CSS)
