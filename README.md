@@ -58,11 +58,6 @@ College laboratories (Physics, Chemistry, Computer, Electrical/Mechanical) face:
 |![home](https://github.com/user-attachments/assets/f894f638-889e-4082-a154-129b003051bd) | ![mascot](https://github.com/user-attachments/assets/51b5b3f9-c79d-4dac-baa8-88a257df6a90) | ![fix](https://github.com/user-attachments/assets/d13cdd53-072b-47b2-877a-2c8845f00b81)
 |
 
-Additional:
-- `screenshots/mobile.png` (Mobile responsive view)
-- `screenshots/teach-mode.png` (Teach flow)
-
----
 
 ## 🚀 Quick Start (Front-End Only)
 
