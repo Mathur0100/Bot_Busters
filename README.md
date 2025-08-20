@@ -55,7 +55,8 @@ College laboratories (Physics, Chemistry, Computer, Electrical/Mechanical) face:
 
 | Home (Futuristic UI) | Typing + Mascot | Example Fix |
 |---|---|---|
-| ![Home](screenshots/home.png) | ![Typing](screenshots/typing.png) | ![Fix](screenshots/fix.png) |
+| ![Home](![home](https://github.com/user-attachments/assets/7cdf2c68-af7d-4130-b600-05f5bae28724)
+) | ![Typing](screenshots/typing.png) | ![Fix](screenshots/fix.png) |
 
 Additional:
 - `screenshots/mobile.png` (Mobile responsive view)
