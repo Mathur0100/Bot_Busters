@@ -106,7 +106,7 @@ Quantex/
 
 - [ ] Repo link pasted into the form.
 - [ ] README includes problem statement, progress, solution, tech stack, screenshots.
-- [ ] Screenshots added to `/screenshots` and paths updated.
+- [ ] Screenshots added to `readme.md` and paths updated.
 - [ ] Opened `index.html` to verify everything works end-to-end.
 
 ---
